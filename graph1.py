@@ -1,52 +1,71 @@
 import csv
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 
-with open('NSL_Regular_Season_Data.csv', newline='') as regularSeasonRawData:
-    reader = csv.reader(regularSeasonRawData)
-    regularSeasonData = list(reader)
+with open(file="NSL_Regular_Season_Data.csv", newline='') as regular:
+    reader = csv.reader(regular)
+    regularSeason = list(reader)
 
-regularSeasonData.pop(0)  # Remove headers
+with open(file="NSL_Metadata.csv", newline='') as info:
+    reader = csv.reader(info)
+    teamInfo = list(reader)
 
-teamData = {}  # Initialize dictionary to store team data
+df = pd.read_csv('NSL_Regular_Season_Data.csv')
 
-# Process data to accumulate xG and shots for each team
-for row in regularSeasonData:
-    homeTeam = row[3]  # Assuming column index 3 for home team code
-    awayTeam = row[4]  # Assuming column index 4 for away team code
-    homeXG = float(row[6])  # Assuming column index 6 for home xG
-    awayXG = float(row[7])  # Assuming column index 7 for away xG
-    homeShots = int(row[8])  # Assuming column index 8 for home shots
-    awayShots = int(row[9])  # Assuming column index 9 for away shots
+i = 1
 
-    # Update home team data
-    if homeTeam not in teamData:
-        teamData[homeTeam] = {'totalXG': 0, 'matches': 0}
-    teamData[homeTeam]['totalXG'] += homeXG
-    teamData[homeTeam]['matches'] += 1
+teamList = []
 
-    # Update away team data
-    if awayTeam not in teamData:
-        teamData[awayTeam] = {'totalXG': 0, 'matches': 0}
-    teamData[awayTeam]['totalXG'] += awayXG
-    teamData[awayTeam]['matches'] += 1
+team_data = {}
 
-# Calculate average xG for each team
-for team in teamData:
-    teamData[team]['avgXG'] = teamData[team]['totalXG'] / teamData[team]['matches']
+# Team list
+while i < len(teamInfo):
+    teamList.append([teamInfo[i][3]])
+    i += 1
 
-# Convert teamData to DataFrame for plotting
-teams = list(teamData.keys())
-avgXGs = [teamData[team]['avgXG'] for team in teams]
+print(teamList)
 
-df = pd.DataFrame({'Team': teams, 'Average xG': avgXGs})
+# Identifying the team name
+for team in teamList:
+    teamName = team[0]
+    goalsConceded = []
+    shotsByOpposing = []
+
+    # Identifying the colums relevant to the team match-ups (games)
+    teamMatches = df[(df['HomeTeam'] == teamName) | (df['AwayTeam'] == teamName)]
+    
+    # Iterates over the rows of the DataFrame 'teamMatches' (which consists of the team match-ups)
+    for index, row in teamMatches.iterrows():
+        if row['HomeTeam'] == teamName: # team is home
+            goalsConceded.append(row['AwayScore'])
+            shotsByOpposing.append(row['Away_shots'])
+        if row['AwayTeam'] == teamName: # team is away
+            goalsConceded.append(row['HomeScore'])
+            shotsByOpposing.append(row['Home_shots'])
+    
+    totalConceded = sum(goalsConceded)
+    totalShotsAgainst = sum(shotsByOpposing)
+
+    percentage = round((totalConceded / totalShotsAgainst) * 100, 2)
+
+    team_data[teamName] = {'Goals Conceded': totalConceded, 'Shots Against': totalShotsAgainst, 'Conversion': percentage}
+
+for team, data in team_data.items():
+    print(f"Team: {team}")
+    print(f"Goals Conceded: {data['Goals Conceded']}")
+    print(f"Shots by Opposing Team: {data['Shots Against']}")
+    print(f"Conversion (%): {data['Conversion']}\n")
+
+team_df = pd.DataFrame.from_dict(team_data, orient='index', columns=['Goals Conceded', 'Shots Against', 'Conversion'])
+
+team_df_sorted = team_df.sort_values(by='Conversion', ascending=True)
 
 # Plotting
-plt.figure(figsize=(14, 6))
-plt.bar(df['Team'], df['Average xG'], color='skyblue')
+plt.figure(figsize=(10, 8))
+plt.bar(team_df_sorted.index, team_df_sorted['Conversion'], color='Blue')
 plt.xlabel('Team')
-plt.ylabel('Average Expected Goals (xG)')
-plt.title('Average xG per Team')
-plt.xticks(rotation=90)
+plt.xticks(rotation=45)
+plt.ylabel('Defensive Efficiency Conversion (%)')
+plt.title('Defensive Efficiency (Total Goals Conceded vs. Total Shots by Opposing Teams)')
 plt.tight_layout()
 plt.show()
