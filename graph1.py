@@ -8,59 +8,45 @@ with open('NSL_Regular_Season_Data.csv', newline='') as regularSeasonRawData:
 
 regularSeasonData.pop(0)  # Remove headers
 
-regularSeasonProcessedData = []
+teamData = {}  # Initialize dictionary to store team data
 
-# Process data and include match outcomes
-for i in range(len(regularSeasonData)):
-    homeDivisionFactor = int(regularSeasonData[i][8]) if int(regularSeasonData[i][8]) != 0 else 1
-    awayDivisionFactor = int(regularSeasonData[i][9]) if int(regularSeasonData[i][9]) != 0 else 1
-    homeScore = int(regularSeasonData[i][4])
-    awayScore = int(regularSeasonData[i][5])
-    
-    # Determine match outcome
-    if homeScore > awayScore:
-        outcome = 'Home Win'
-    elif homeScore < awayScore:
-        outcome = 'Away Win'
-    else:
-        outcome = 'Draw'
-    
-    regularSeasonProcessedData.append([
-        float(regularSeasonData[i][6]) / homeDivisionFactor,  # Home xG adjusted
-        int(regularSeasonData[i][8]),  # Home shots
-        float(regularSeasonData[i][7]) / awayDivisionFactor,  # Away xG adjusted
-        int(regularSeasonData[i][9]),  # Away shots
-        outcome  # Match outcome
-    ])
+# Process data to accumulate xG and shots for each team
+for row in regularSeasonData:
+    homeTeam = row[3]  # Assuming column index 3 for home team code
+    awayTeam = row[4]  # Assuming column index 4 for away team code
+    homeXG = float(row[6])  # Assuming column index 6 for home xG
+    awayXG = float(row[7])  # Assuming column index 7 for away xG
+    homeShots = int(row[8])  # Assuming column index 8 for home shots
+    awayShots = int(row[9])  # Assuming column index 9 for away shots
 
-df = pd.DataFrame(regularSeasonProcessedData, columns=["homeXG", "homeShots", "awayXG", "awayShots", "Outcome"])
+    # Update home team data
+    if homeTeam not in teamData:
+        teamData[homeTeam] = {'totalXG': 0, 'matches': 0}
+    teamData[homeTeam]['totalXG'] += homeXG
+    teamData[homeTeam]['matches'] += 1
 
-fig, ax = plt.subplots(1, 2, figsize=(14, 6))
+    # Update away team data
+    if awayTeam not in teamData:
+        teamData[awayTeam] = {'totalXG': 0, 'matches': 0}
+    teamData[awayTeam]['totalXG'] += awayXG
+    teamData[awayTeam]['matches'] += 1
 
-# Define color map
-color_map = {'Home Win': 'green', 'Away Win': 'red', 'Draw': 'yellow'}
+# Calculate average xG for each team
+for team in teamData:
+    teamData[team]['avgXG'] = teamData[team]['totalXG'] / teamData[team]['matches']
 
-scatterSize = 2
+# Convert teamData to DataFrame for plotting
+teams = list(teamData.keys())
+avgXGs = [teamData[team]['avgXG'] for team in teams]
 
-# Home teams
-for outcome, color in color_map.items():
-    subset = df[df['Outcome'] == outcome]
-    ax[0].scatter(subset['homeShots'], subset['homeXG'], c=color, label=outcome, s=scatterSize)
-ax[0].set_xlabel('Shots')
-ax[0].set_ylabel('Average Expected Goals (xG)')
-ax[0].set_title('Home Teams Shot Quality: Shots vs Average xG')
-ax[0].grid(True)
-ax[0].legend()
+df = pd.DataFrame({'Team': teams, 'Average xG': avgXGs})
 
-# Away teams
-for outcome, color in color_map.items():
-    subset = df[df['Outcome'] == outcome]
-    ax[1].scatter(subset['awayShots'], subset['awayXG'], c=color, label=outcome, s=scatterSize)
-ax[1].set_xlabel('Shots')
-ax[1].set_ylabel('Average Expected Goals (xG)')
-ax[1].set_title('Away Teams Shot Quality: Shots vs Average xG')
-ax[1].grid(True)
-ax[1].legend()
-
+# Plotting
+plt.figure(figsize=(14, 6))
+plt.bar(df['Team'], df['Average xG'], color='skyblue')
+plt.xlabel('Team')
+plt.ylabel('Average Expected Goals (xG)')
+plt.title('Average xG per Team')
+plt.xticks(rotation=90)
 plt.tight_layout()
 plt.show()
