@@ -19,8 +19,8 @@ for index,row in team_data.iterrows():
 team_data['Result'] = result
 print(team_data)
 
-#I have arbitrarily chosen 3 columns as factors - Home Expected Goals, Away Expected Goals, Home ToP
-X = team_data.iloc[:,[6,7,16]]
+#I have arbitrarily chosen 3 columns as factors - Home Score, Away Score, Home Expected Goals, Away Expected Goals
+X = team_data.iloc[:,[4, 5, 6, 7]]
 print (X)
 y = team_data.iloc[:,21]
 y = y.astype('int')
