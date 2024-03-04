@@ -6,12 +6,12 @@ from sklearn.preprocessing import StandardScaler
 classifier_loaded = load('logistic_regression_model_probability.joblib')
 
 # Load the new dataset
-new_team_data = pd.read_csv('Updated_NSL_Group_Games_Data.csv')
+new_team_data = pd.read_csv('Updated_NSL_Knockout_Round_Games.csv')
 
 # Adjust the column selection to match the features used during training
 # Ensure the order and nature of features match those used for training
 # This example assumes the correct features in the new dataset are now at different indices
-X_new = new_team_data.iloc[:,3:27]  # Adjust indices as necessary
+X_new = new_team_data.iloc[:,3:25]  # Adjust indices as necessary
 
 # Load the scaler
 scaler = load('standard_scaler_probability.joblib')

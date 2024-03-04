@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from joblib import dump, load
 
 # Load the dataset
-team_data = pd.read_csv('cleaned_NSL_Regular_Season_Data_with_Categories.csv')
+team_data = pd.read_csv('cleaned_NSL_Regular_Season_Data_Neutral.csv')
 
 # Determine the winner of each game (1 if the Home team won, 0 if not)
 result = []
@@ -21,7 +21,7 @@ for index, row in team_data.iterrows():
 team_data['Result'] = result
 
 # Selection of features for the model
-X = team_data.iloc[:, 17:41]  # Adjusted based on provided code
+X = team_data.iloc[:, 17:39]  # Adjusted based on provided code
 y = team_data['Result'].astype('int')
 
 # Data preprocessing
