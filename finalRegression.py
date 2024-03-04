@@ -5,6 +5,7 @@ import seaborn as sns
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+from joblib import dump, load
 
 team_data = pd.read_csv('cleaned_NSL_Regular_Season_Data_with_Categories.csv')
 
@@ -65,3 +66,5 @@ percentage_correct = (correct_predictions / total_games) * 100
 print(f"Total number of games: {total_games}")
 print(f"Number of games predicted correctly: {correct_predictions}")
 print(f"Percentage of correct predictions: {percentage_correct:.2f}%")
+
+dump(classifier, 'logistic_regression_model.joblib')
