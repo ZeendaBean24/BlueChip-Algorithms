@@ -23,7 +23,7 @@ print(team_data)
 #This selection of columns excludes the goal differential features and basic regular season data (post match statistics)
 #To include the basic regular season data, change "18" to "6"
 #Both 6:42 and 18:42 get an accuracy of 72.92%
-X = team_data.iloc[:,18:42]
+X = team_data.iloc[:,17:41]
 #[18, 19, 22, 23, 26, 27, 34, 35, 36, 37]
 print (X)
 y = team_data.iloc[:,43]
@@ -68,3 +68,4 @@ print(f"Number of games predicted correctly: {correct_predictions}")
 print(f"Percentage of correct predictions: {percentage_correct:.2f}%")
 
 dump(classifier, 'logistic_regression_model.joblib')
+dump(sc, 'standard_scaler.joblib')
